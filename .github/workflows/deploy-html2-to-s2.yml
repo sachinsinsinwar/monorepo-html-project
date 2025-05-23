@@ -12,16 +12,14 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+    - name: Checkout Repository
+      uses: actions/checkout@v3
 
-      - name: Set up SSH
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.S2_SSH_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H 43.205.237.183 >> ~/.ssh/known_hosts
+    - name: Set up SSH Key
+      run: |
+        echo "${{ secrets.S2_SSH_KEY }}" > private_key
+        chmod 600 private_key
 
-      - name: Deploy to S2
-        run: |
-          rsync -avz --delete ./HTML2/ secureadmin@43.205.237.183:/var/www/html/
+    - name: Deploy to EC2 S2
+      run: |
+        rsync -avz -e "ssh -i private_key -o StrictHostKeyChecking=no" ./HTML2/ secureadmin@${{ secrets.S2_PUBLIC_IP }}:/var/www/html/
