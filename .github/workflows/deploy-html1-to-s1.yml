@@ -4,24 +4,23 @@ on:
   push:
     branches:
       - main
+    paths:
+      - 'HTML1/**'
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+    - name: Checkout Repository
+      uses: actions/checkout@v3
 
+    - name: Set up SSH Key
+      run: |
+        echo "${{ secrets.S1_SSH_KEY }}" > private_key
+        chmod 600 private_key
 
-      - name: Setup SSH key for S1
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.S1_SSH_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H 3.110.170.218 >> ~/.ssh/known_hosts
+    - name: Deploy to EC2 S1
+      run: |
+        rsync -avz -e "ssh -i private_key -o StrictHostKeyChecking=no" ./HTML1/ secureadmin@${{ secrets.S1_PUBLIC_IP }}:/var/www/html/
 
-      - name: Deploy HTML1 to S1
-        run: |
-          ssh -i ~/.ssh/id_rsa secureadmin@3.110.170.218 "rm -rf ~/html && mkdir ~/html"
-          scp -i ~/.ssh/id_rsa -r HTML1/* secureadmin@3.110.170.218:~/html
