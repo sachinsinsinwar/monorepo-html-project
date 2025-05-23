@@ -1,0 +1,27 @@
+name: Deploy HTML2 to S2
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'HTML2/**'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.S2_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H 43.205.237.183 >> ~/.ssh/known_hosts
+
+      - name: Deploy to S2
+        run: |
+          rsync -avz --delete ./HTML2/ secureadmin@43.205.237.183:/var/www/html/
